@@ -30,17 +30,19 @@ var action = process.argv[2];
 //spotify
 
 //omdb
-request("http://www.omdbapi.com/?t="+ movieName + "&y=&plot=short&apikey=trilogy", function(error, response, body) {
+var movieQueryUrl = "http://www.omdbapi.com/?t=remember+the+titans&y=&plot=short&apikey=trilogy";
+
+request(movieQueryUrl, function(error, response, body) {
 
   if (!error && response.statusCode === 200) {
    
-    console.log(JSON.parse(body).Actors);
+    console.log("Actors" +JSON.parse(body).Actors);
+    console.log("Release Year: " + JSON.parse(body).Year);
 
   }
 });
 
 //commands
-
 switch (action) {
     //This will show your last 20 tweets and when they were created at in your terminal/bash window.
     case "my-tweets":

@@ -1,5 +1,19 @@
 # liri-node-app
 
-Note: I didn't have much time this weekend to review or work on hw assignment
+Input: 
+$ node liri.js
 
-I think I'm having most trouble with requesting various api's and installing npm's
+twitter:
+? What would you like to do? my-tweets
+
+spotify:
+? What would you like to do? spotify-this-song
+? Which song? dust in the wind
+
+omdb:
+? What would you like to do? movie-this
+? Which movie? titanic
+
+read:
+? What would you like to do? do-what-it-says
+

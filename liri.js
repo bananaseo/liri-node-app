@@ -1,66 +1,138 @@
 require("dotenv").config();
 
-var spotify = new Spotify(keys.spotify);var client = new Twitter(keys.twitter);
-
-var fs = require("fs"); 
+var key = require("./key.js"); 
 var request = require("request"); 
+var inquirer = require ("inquirer"); 
+var fs = require ("fs"); 
 
-var action = process.argv[2]; 
+//Twitter------------------------
+var Twitter = require("twitter"); 
+var client = new Twitter(key.twitter);
+var params = {screen_name: 'NaSeo6'}; 
 
-//twitter api, spoify api, omdb api
+//Spotify-------------------------
+var Spotify = require("node-spotify-api");
+var spotify = new Spotify(key.spotify);
+//var songTitle = process.argv[2];
 
-//make sure to do npm install 
 
-// 3. To retrieve the data that will power this app, you'll need to send requests to the Twitter, Spotify and OMDB APIs. You'll find these Node packages crucial for your assignment.
+  inquirer.prompt ([
+    {
+      type: "input", 
+      name: "liriBot",
+      message: "What would you like to do?"
+      
 
-//    * [Twitter](https://www.npmjs.com/package/twitter)
-   
-//    * [Node-Spotify-API](https://www.npmjs.com/package/node-spotify-api)
-   
-//    * [Request](https://www.npmjs.com/package/request)
-
-//      * You'll use Request to grab data from the [OMDB API](http://www.omdbapi.com).
-
-//    * [DotEnv](https://www.npmjs.com/package/dotenv)
-
-//You will utilize the [node-spotify-api](https://www.npmjs.com/package/node-spotify-api) package in order to retrieve song information from the Spotify API.
-
-//twitter
-
-//spotify
-
-//omdb
-var movieQueryUrl = "http://www.omdbapi.com/?t=remember+the+titans&y=&plot=short&apikey=trilogy";
-
-request(movieQueryUrl, function(error, response, body) {
-
-  if (!error && response.statusCode === 200) {
-   
-    console.log("Actors" +JSON.parse(body).Actors);
-    console.log("Release Year: " + JSON.parse(body).Year);
-
-  }
-});
-
-//commands
-switch (action) {
-    //This will show your last 20 tweets and when they were created at in your terminal/bash window.
-    case "my-tweets":
-      myTweets();
-      break;
-    
-    //This will show information about the song in your terminal/bash window
-    case "spotify-this-song":
-      spotifyThisSong();
-      break;
-    
-    //This will input movie info
-    case "movie-this":
-      movieThis();
-      break;
-    
-    //Liri will take the text inside of random.txt and then use it to all Liri's commands  
-    case "do-what-it-says":
-      doWhatItSays();
-      break;
     }
+  ]).then(function(user){
+    if (user.liriBot === "my-tweets") {
+      
+      client.get('statuses/user_timeline', params, function (error, tweets, response) {
+        if (!error) {
+    
+          for (i = 0; i < tweets.length; i++) {
+            console.log(`Tweet : ${tweets[i].text}`);
+            console.log(`Created : ${tweets[i].created_at}`);
+            console.log("============================")
+          };
+        }
+      });
+    }
+
+    else if (user.liriBot === "spotify-this-song") {
+      inquirer.prompt([
+        {
+          type:"input",
+          name: "inputSong",
+          message: "Which song?"
+        }
+      ]).then(function(user2){
+        var songTitle = "'"+user2.inputSong+"'"; 
+        
+          spotify.search({ type: 'track', query: songTitle, limit: 1 }, function (err, data) {
+          
+            if (err) {
+              return console.log('Error occurred: ' + err);
+            }
+            console.log("Artist: "+ JSON.stringify(data.tracks.items[0].album.artists[0].name, null, 2));
+            console.log("Song Link: "+ JSON.stringify(data.tracks.items[0].external_urls.spotify, null, 2));
+          });
+      })
+    }
+
+    else if (user.liriBot === "movie-this") {
+      inquirer.prompt([
+        {
+          type:"input",
+          name: "inputMovie",
+          message: "Which movie?"
+        }
+      ]).then(function(user3){
+        
+
+            //Omdb------------------------------------------
+            var nodeArgs = process.argv; 
+            var movieName = "'"+user3.inputMovie+"'";
+
+            for (var i = 2; i < nodeArgs.length; i++) {
+
+              if (i > 2 && i < nodeArgs.length) {
+
+                movieName = movieName + "+" + nodeArgs[i];
+
+              }
+
+              else {
+
+                movieName += nodeArgs[i];
+
+              }
+            }
+            var movieQueryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+
+            request(movieQueryUrl, function(error, response, body){
+              if (!error && response.statusCode === 200) {
+              
+                console.log("Title: " +JSON.parse(body).Title);
+                console.log("Release Year: " + JSON.parse(body).Year);
+                console.log("IMDB Ratings: " +JSON.parse(body).Ratings[0].Value);
+                console.log("Rotten Tomatoes Ratings: " +JSON.parse(body).Ratings[1].Value);
+                console.log("Country: " +JSON.parse(body).Country);
+                console.log("Language: " +JSON.parse(body).Language);
+                console.log("Plot: " +JSON.parse(body).Plot);
+                console.log("Actors: " +JSON.parse(body).Actors);
+            }})
+        
+          
+      })
+    }
+
+   else if (user.liriBot === "do-what-it-says") {
+      //read text-----------------------------------------
+      fs.readFile("random.txt", "utf8", function(error,data) {
+        if (error) {
+          return console.log(error); 
+        }
+        var dataArr = data.split(","); 
+        console.log(dataArr[1]); 
+        spotify.search({ type: 'track', query: dataArr[1], limit: 1 }, function (err, data) {
+          
+          if (err) {
+            return console.log('Error occurred: ' + err);
+          }
+          console.log("Artist: "+ JSON.stringify(data.tracks.items[0].album.artists[0].name, null, 2));
+          console.log("Song Link: "+ JSON.stringify(data.tracks.items[0].external_urls.spotify, null, 2));
+        });
+        
+
+      })
+   } 
+   
+   
+    
+  })
+  
+
+
+
+
